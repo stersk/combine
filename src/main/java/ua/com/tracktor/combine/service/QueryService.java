@@ -34,21 +34,22 @@ public class QueryService {
 
         @Override
         public void run() {
-            List<Query> queriesForProcess = queryRepository.findTop10ByOrderByIdDesc();
+            List<Query> queriesForProcess = queryRepository.findTop10ByProcessingErrorFalseOrderByIdDesc();
             if (!queriesForProcess.isEmpty()) {
                 queriesForProcess.forEach(this::processQuery);
-                threadPoolExecutor.execute(new ProcessDelayedQueriesTask());
+
+                runDelayedQueryProcessing();
             }
         }
 
         @Override
-        public void close() throws Exception {
+        public void close() {
             interruptExecution = true;
         }
 
         private void processQuery(Query query) {
             if (!interruptExecution) {
-                String relQuery = "/hs/viber/event/" + query.getAccount();
+
                 try {
                     String scheme = environment.getProperty("viber-service.server.scheme");
                     String address = environment.getProperty("viber-service.server.address");
@@ -73,8 +74,14 @@ public class QueryService {
 
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
+
+                    query.setProcessingError(true);
+                    queryRepository.save(query);
                 } catch (HttpClientErrorException | HttpServerErrorException e) {
                     String responseBody = e.getResponseBodyAsString();
+
+                    query.setProcessingError(true);
+                    queryRepository.save(query);
                 }
             }
         }
@@ -85,6 +92,7 @@ public class QueryService {
         query.setSignature(signature);
         query.setAccount(account);
         query.setRequestBody(body);
+        query.setProcessingError(false);
 
         return queryRepository.save(query);
     }

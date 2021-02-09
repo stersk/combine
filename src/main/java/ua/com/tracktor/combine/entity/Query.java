@@ -32,4 +32,7 @@ public class Query {
     @Type(type = "org.hibernate.type.TextType")
     @Column(name = "body")
     private String requestBody;
+
+    @Column(name = "processing_error")
+    private Boolean processingError;
 }
