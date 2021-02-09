@@ -31,10 +31,10 @@ public class QueryController {
 
     @PostMapping(path="/viber/{account}")
     public ResponseEntity<String> processRequest(@RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request, @PathVariable String account) throws URISyntaxException {
-        ResponseEntity<String> responseEntity = null;
+        ResponseEntity<String> responseEntity;
 
         ObjectMapper mapper = new ObjectMapper();
-        Boolean proxyOnly = null;
+        boolean proxyOnly = true;
 
         try {
             JsonNode responseBodyNode = mapper.readTree(body);
@@ -56,12 +56,13 @@ public class QueryController {
         }
 
         if (proxyOnly) {
+            String scheme = environment.getProperty("viber-service.server.scheme");
             String server = environment.getProperty("viber-service.server.address");
             String basePath = environment.getProperty("viber-service.server.path");
             int port = Integer.parseInt(Objects.requireNonNull(environment.getProperty("viber-service.server.port")));
             String path = basePath + request.getRequestURI().substring(7);
 
-            URI uri = new URI("https", null, server, port, path, request.getQueryString(), null);
+            URI uri = new URI(scheme, null, server, port, path, null, null);
 
             HttpEntity<String> httpEntity = new HttpEntity<>(body, headers);
 
@@ -79,7 +80,7 @@ public class QueryController {
                 data.put("reason", e.getLocalizedMessage());
 
                 ObjectMapper objectMapper = new ObjectMapper();
-                String stringData = "";
+                String stringData;
                 try {
                     stringData = objectMapper.writeValueAsString(data);
                 } catch (JsonProcessingException jsonProcessingException) {
@@ -92,6 +93,7 @@ public class QueryController {
         } else {
             String signature = headers.getFirst("X-Viber-Content-Signature");
             queryService.saveQuery(signature, account, body);
+            queryService.runDelayedQueryProcessing();
             responseEntity = new ResponseEntity<>("", HttpStatus.OK);
         }
 
