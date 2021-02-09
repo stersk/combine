@@ -21,9 +21,9 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[queries](
 	[id] [bigint] NOT NULL,
-	[account] [varchar](255) NULL,
-	[body] [varchar](max) NULL,
-	[signature] [varchar](255) NULL,
+	[account] [varchar](255) NOT NULL,
+	[body] [varchar](max) NOT NULL,
+	[signature] [varchar](255) NOT NULL,
 PRIMARY KEY CLUSTERED
 (
 	[id] ASC
