@@ -1,9 +1,9 @@
 USE [master]
 GO
 /****** Object:  Database [combineProxyServer]    Script Date: 08.02.2021 18:50:30 ******/
-EXEC sys.sp_db_vardecimal_storage_format N'combineProxyServer', N'ON'
+EXEC sys.sp_db_vardecimal_storage_format N'KombineProxyServer', N'ON'
 GO
-USE [combineProxyServer]
+USE [KombineProxyServer]
 GO
 /****** Object:  Sequence [dbo].[query_sequence]    Script Date: 08.02.2021 18:50:30 ******/
 CREATE SEQUENCE [dbo].[query_sequence]
@@ -33,5 +33,5 @@ GO
 /****** Object:  Index [flyway_schema_history_s_idx]    Script Date: 08.02.2021 18:50:30 ******/
 USE [master]
 GO
-ALTER DATABASE [combineProxyServer] SET  READ_WRITE
+ALTER DATABASE [KombineProxyServer] SET  READ_WRITE
 GO

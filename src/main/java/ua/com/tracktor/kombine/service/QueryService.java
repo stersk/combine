@@ -1,4 +1,4 @@
-package ua.com.tracktor.combine.service;
+package ua.com.tracktor.kombine.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import ua.com.tracktor.combine.data.QueryRepository;
-import ua.com.tracktor.combine.entity.Query;
+import ua.com.tracktor.kombine.data.QueryRepository;
+import ua.com.tracktor.kombine.entity.Query;
 
 import java.net.URI;
 import java.net.URISyntaxException;

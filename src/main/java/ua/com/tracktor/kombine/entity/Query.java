@@ -1,4 +1,4 @@
-package ua.com.tracktor.combine.entity;
+package ua.com.tracktor.kombine.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
