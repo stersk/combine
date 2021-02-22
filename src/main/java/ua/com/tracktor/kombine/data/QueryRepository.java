@@ -1,7 +1,7 @@
-package ua.com.tracktor.combine.data;
+package ua.com.tracktor.kombine.data;
 
 import org.springframework.data.repository.CrudRepository;
-import ua.com.tracktor.combine.entity.Query;
+import ua.com.tracktor.kombine.entity.Query;
 
 import java.util.List;
 

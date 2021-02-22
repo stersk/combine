@@ -1,4 +1,4 @@
-package ua.com.tracktor.combine.controller;
+package ua.com.tracktor.kombine.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import ua.com.tracktor.combine.service.QueryService;
+import ua.com.tracktor.kombine.service.QueryService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
