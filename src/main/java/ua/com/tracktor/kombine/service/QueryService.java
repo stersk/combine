@@ -34,11 +34,15 @@ public class QueryService {
 
         @Override
         public void run() {
-            List<Query> queriesForProcess = queryRepository.findTop10ByProcessingErrorFalseOrderByIdDesc();
-            if (!queriesForProcess.isEmpty()) {
-                queriesForProcess.forEach(this::processQuery);
+            boolean processQueries = Boolean.parseBoolean(environment.getProperty("viber-service.delayed-queries-processing.enabled"));
 
-                runDelayedQueryProcessing();
+            if (processQueries) {
+                List<Query> queriesForProcess = queryRepository.findTop10ByProcessingErrorFalseOrderByIdDesc();
+                if (!queriesForProcess.isEmpty()) {
+                    queriesForProcess.forEach(this::processQuery);
+
+                    runDelayedQueryProcessing();
+                }
             }
         }
 
