@@ -7,6 +7,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "queries")
@@ -35,4 +36,7 @@ public class Query {
 
     @Column(name = "processing_error")
     private Boolean processingError;
+
+    @Column(name = "request_date")
+    private Timestamp requestDate;
 }
