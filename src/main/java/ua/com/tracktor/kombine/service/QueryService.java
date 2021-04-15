@@ -14,6 +14,7 @@ import ua.com.tracktor.kombine.entity.Query;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -26,6 +27,9 @@ public class QueryService {
     @Autowired
     Environment environment;
 
+    @Autowired
+    PropertyService propertyService;
+
     private static final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2));
 
@@ -34,7 +38,7 @@ public class QueryService {
 
         @Override
         public void run() {
-            boolean processQueries = Boolean.parseBoolean(environment.getProperty("viber-service.delayed-queries-processing.enabled"));
+            boolean processQueries = Boolean.parseBoolean(propertyService.getProperty("viber-service.delayed-queries-processing.enabled"));
 
             if (processQueries) {
                 List<Query> queriesForProcess = queryRepository.findTop10ByProcessingErrorFalseOrderByIdDesc();
@@ -92,11 +96,14 @@ public class QueryService {
     }
 
     public Query saveQuery(String signature, String account, String body) {
+        long currentMillis = System.currentTimeMillis();
+
         Query query = new Query();
         query.setSignature(signature);
         query.setAccount(account);
         query.setRequestBody(body);
         query.setProcessingError(false);
+        query.setRequestDate(new Timestamp(currentMillis));
 
         return queryRepository.save(query);
     }
