@@ -1,23 +1,23 @@
 package ua.com.tracktor.kombine.service;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import ua.com.tracktor.kombine.data.QueryRepository;
 import ua.com.tracktor.kombine.entity.Query;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class QueryService {
@@ -78,17 +78,18 @@ public class QueryService {
                     ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.POST, httpEntity, String.class);
                     if (responseEntity.getStatusCode() == HttpStatus.OK) {
                         queryRepository.delete(query);
+                    } else {
+                        query.setProcessingResultCode(responseEntity.getStatusCode());
+                        query.setProcessingErrorMessage(responseEntity.getBody());
                     }
 
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(e.getLocalizedMessage()).append(System.lineSeparator()).append(System.lineSeparator());
+                    stringBuilder.append(ExceptionUtils.getStackTrace(e));
 
-                    query.setProcessingError(true);
-                    queryRepository.save(query);
-                } catch (HttpClientErrorException | HttpServerErrorException e) {
-                    String responseBody = e.getResponseBodyAsString();
-
-                    query.setProcessingError(true);
+                    query.setProcessingResultCode(HttpStatus.I_AM_A_TEAPOT);
+                    query.setProcessingErrorMessage(stringBuilder.toString());
                     queryRepository.save(query);
                 }
             }
@@ -102,8 +103,8 @@ public class QueryService {
         query.setSignature(signature);
         query.setAccount(account);
         query.setRequestBody(body);
-        query.setProcessingError(false);
         query.setRequestDate(new Timestamp(currentMillis));
+        query.setProcessingResultCode(null);
 
         return queryRepository.save(query);
     }
