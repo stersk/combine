@@ -1,10 +1,10 @@
 package ua.com.tracktor.kombine.entity;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
+import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -39,4 +39,45 @@ public class Query {
 
     @Column(name = "request_date")
     private Timestamp requestDate;
+
+    @Column(name = "processing_result_code")
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private Integer processingResultCode;
+
+    @Column(name = "processing_date")
+    private Timestamp processingDate;
+
+    @Column(name = "processing_error_message")
+    @Type(type = "org.hibernate.type.TextType")
+    private String processingErrorMessage;
+
+    private Boolean retry;
+
+    public void setProcessingResultCode(HttpStatus processingResultCode){
+        if (processingResultCode == null) {
+            this.processingResultCode = 0;
+            retry           = false;
+            processingError = false;
+        } else {
+            switch (processingResultCode.value()) {
+                case (200) :
+                case (418) :
+                case (500) :
+                    retry = false;
+                    break;
+                default:
+                    retry = true;
+                    break;
+            }
+
+            this.processingResultCode = processingResultCode.value();
+            processingDate = new Timestamp(System.currentTimeMillis());
+            processingError = processingResultCode != HttpStatus.OK;
+        }
+    }
+
+    public HttpStatus getProcessingResultCode(){
+        return (processingResultCode == null)? null : HttpStatus.valueOf(processingResultCode);
+    }
 }
