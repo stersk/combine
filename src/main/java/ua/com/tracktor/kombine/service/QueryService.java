@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ua.com.tracktor.kombine.data.QueryRepository;
@@ -18,8 +21,11 @@ import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
+@EnableAsync
 public class QueryService {
     @Autowired
     QueryRepository queryRepository;
@@ -41,7 +47,7 @@ public class QueryService {
             boolean processQueries = Boolean.parseBoolean(propertyService.getProperty("viber-service.delayed-queries-processing.enabled"));
 
             if (processQueries) {
-                List<Query> queriesForProcess = queryRepository.findTop10ByProcessingErrorFalseOrderByIdDesc();
+                List<Query> queriesForProcess = getQueriesToProcess();
                 if (!queriesForProcess.isEmpty()) {
                     queriesForProcess.forEach(this::processQuery);
 
@@ -77,7 +83,11 @@ public class QueryService {
 
                     ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.POST, httpEntity, String.class);
                     if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                        queryRepository.delete(query);
+                        query.setProcessingResultCode(HttpStatus.OK);
+                        query.setProcessingError(false);
+                        query.setProcessingDate(new Timestamp(System.currentTimeMillis()));
+                        query.setProcessingErrorMessage("");
+
                     } else {
                         query.setProcessingResultCode(responseEntity.getStatusCode());
                         query.setProcessingErrorMessage(responseEntity.getBody());
@@ -90,9 +100,23 @@ public class QueryService {
 
                     query.setProcessingResultCode(HttpStatus.I_AM_A_TEAPOT);
                     query.setProcessingErrorMessage(stringBuilder.toString());
-                    queryRepository.save(query);
+                }
+                queryRepository.save(query);
+            }
+        }
+
+        private List<Query> getQueriesToProcess() {
+            List<Query> queries = queryRepository.findTop10ByProcessingResultCodeOrderByRequestDateDesc(0);
+            if (queries.size() < 10) {
+                Timestamp dateForLimit = new Timestamp(System.currentTimeMillis() - 86400000L);
+
+                List<Query> queriesWithError = queryRepository.findTop10ByProcessingResultCodeNotAndRetryTrueAndProcessingDateBeforeOrderByRequestDateDesc(0, dateForLimit);
+                if (queriesWithError.size() > 0) {
+                    queries = Stream.concat(queries.stream(), queriesWithError.stream()).limit(10).collect(Collectors.toList());
                 }
             }
+
+            return queries;
         }
     }
 
@@ -115,5 +139,13 @@ public class QueryService {
                 threadPoolExecutor.execute(new ProcessDelayedQueriesTask());
             }
         }
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    @Async
+    public void deleteProcessedQueries() {
+        long daysOffset = Long.parseLong(Objects.requireNonNull(propertyService.getProperty("viber-service.delayed-queries-processing.days-to-keep-processed-queries")));
+        List<Query> queriesToDelete = queryRepository.findByProcessingResultCodeAndProcessingDateBefore(200, new Timestamp(System.currentTimeMillis() - daysOffset * 86400000));
+        queryRepository.deleteAll(queriesToDelete);
     }
 }
