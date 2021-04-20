@@ -36,6 +36,9 @@ public class QueryService {
     @Autowired
     PropertyService propertyService;
 
+    private int similarQueriesCount;
+    private int recordedQueriesCount;
+
     private static final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2));
 
@@ -120,17 +123,30 @@ public class QueryService {
         }
     }
 
-    public Query saveQuery(String signature, String account, String body) {
-        long currentMillis = System.currentTimeMillis();
-
+    public Query saveQuery(String signature, String account, String body, String messageType, String messageToken) {
         Query query = new Query();
         query.setSignature(signature);
         query.setAccount(account);
         query.setRequestBody(body);
-        query.setRequestDate(new Timestamp(currentMillis));
+        query.setRequestDate(new Timestamp(System.currentTimeMillis()));
         query.setProcessingResultCode(null);
+        query.setMessageType(messageType);
+        query.setMessageToken(messageToken);
 
-        return queryRepository.save(query);
+        query = queryRepository.save(query);
+
+        recordedQueriesCount++;
+
+        return query;
+    }
+
+    public boolean isQueryDelayed(String messageType, String messageToken) {
+        boolean result = queryRepository.findByMessageTypeAndMessageToken(messageType, messageToken).isPresent();
+        if (result) {
+            similarQueriesCount++;
+        }
+
+        return result;
     }
 
     public void runDelayedQueryProcessing() {

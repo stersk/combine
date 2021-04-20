@@ -48,6 +48,12 @@ public class Query {
     @Column(name = "processing_date")
     private Timestamp processingDate;
 
+    @Column(name = "message_type")
+    private String messageType;
+
+    @Column(name = "message_token")
+    private String messageToken;
+
     @Column(name = "processing_error_message")
     @Type(type = "org.hibernate.type.TextType")
     private String processingErrorMessage;

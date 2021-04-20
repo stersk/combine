@@ -35,16 +35,20 @@ public class QueryController {
 
         ObjectMapper mapper = new ObjectMapper();
         boolean proxyOnly = true;
+        String messageType = "";
+        String messageToken = "";
 
         try {
             JsonNode responseBodyNode = mapper.readTree(body);
-            JsonNode eventNode = responseBodyNode.get("event");
 
-            switch (eventNode.asText()) {
+            messageToken = responseBodyNode.get("message_token").asText();
+
+            switch (messageType) {
                 case "delivered":
                 case "seen":
                 case "failed":
-                    proxyOnly = false;
+                    proxyOnly   = false;
+                    messageType = responseBodyNode.get("event").asText();
                     break;
 
                 default:
@@ -92,8 +96,10 @@ public class QueryController {
 
         } else {
             String signature = headers.getFirst("X-Viber-Content-Signature");
-            queryService.saveQuery(signature, account, body);
-            queryService.runDelayedQueryProcessing();
+            if (queryService.isQueryDelayed(messageType, messageToken)) {
+                queryService.saveQuery(signature, account, body, messageType, messageToken);
+                queryService.runDelayedQueryProcessing();
+            }
             responseEntity = new ResponseEntity<>("", HttpStatus.OK);
         }
 
