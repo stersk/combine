@@ -54,6 +54,9 @@ public class Query {
     @Column(name = "message_token")
     private String messageToken;
 
+    @Column(name = "message_user_id")
+    private String messageUserId;
+
     @Column(name = "processing_error_message")
     @Type(type = "org.hibernate.type.TextType")
     private String processingErrorMessage;

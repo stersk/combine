@@ -132,7 +132,7 @@ public class QueryService {
         }
     }
 
-    public Query saveQuery(String signature, String account, String body, String messageType, String messageToken) {
+    public Query saveQuery(String signature, String account, String body, String messageType, String messageToken, String messageUserId) {
         Query query = new Query();
         query.setSignature(signature);
         query.setAccount(account);
@@ -141,15 +141,16 @@ public class QueryService {
         query.setProcessingResultCode(null);
         query.setMessageType(messageType);
         query.setMessageToken(messageToken);
+        query.setMessageUserId(messageUserId);
 
         query = queryRepository.save(query);
 
         return query;
     }
 
-    public Timestamp getDelayedMessageDateIfExist(String messageType, String messageToken) {
+    public Timestamp getDelayedMessageDateIfExist(String messageType, String messageToken, String messageUserId) {
         Timestamp result = null;
-        Optional<Query> query = queryRepository.findByMessageTypeAndMessageToken(messageType, messageToken);
+        Optional<Query> query = queryRepository.findByMessageTypeAndMessageTokenAndMessageUserId(messageType, messageToken, messageUserId);
         if (query.isPresent()) {
             result = query.get().getRequestDate();
         }
