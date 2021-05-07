@@ -42,6 +42,7 @@ public class QueryController {
         boolean proxyOnly = true;
         String messageType = "";
         String messageToken = "";
+        String messageUserId = "";
 
         long startTimeInMillis = System.currentTimeMillis();
 
@@ -50,6 +51,10 @@ public class QueryController {
 
             messageToken = responseBodyNode.get("message_token").asText();
             messageType = responseBodyNode.get("event").asText();
+
+            if (responseBodyNode.has("user_id")) {
+                messageUserId = responseBodyNode.get("user_id").asText();
+            }
 
             switch (messageType) {
                 case "delivered":
@@ -104,9 +109,9 @@ public class QueryController {
 
         } else {
             String signature = headers.getFirst("X-Viber-Content-Signature");
-            Timestamp originalQueryTimestamp = queryService.getDelayedMessageDateIfExist(messageType, messageToken);
+            Timestamp originalQueryTimestamp = queryService.getDelayedMessageDateIfExist(messageType, messageToken, messageUserId);
             if (originalQueryTimestamp == null) {
-                queryService.saveQuery(signature, account, body, messageType, messageToken);
+                queryService.saveQuery(signature, account, body, messageType, messageToken, messageUserId);
                 queryService.runDelayedQueryProcessing();
 
                 statisticService.logDelayedQuery(System.currentTimeMillis() - startTimeInMillis);

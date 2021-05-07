@@ -11,5 +11,5 @@ public interface QueryRepository extends CrudRepository<Query, Long> {
     List<Query> findTop10ByProcessingResultCodeOrderByRequestDateDesc(int notProcessedCode);
     List<Query> findTop10ByProcessingResultCodeNotAndRetryTrueAndProcessingDateBeforeOrderByRequestDateDesc(int notProcessedCode, Timestamp lastErrorDateAfter);
     List<Query> findByProcessingResultCodeAndProcessingDateBefore(int processedCode, Timestamp startProcessedDate);
-    Optional<Query> findByMessageTypeAndMessageToken(String messageType, String messageToken);
+    Optional<Query> findByMessageTypeAndMessageTokenAndMessageUserId(String messageType, String messageToken, String messageUserId);
 }
