@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import ua.com.tracktor.kombine.data.QueryRepository;
 import ua.com.tracktor.kombine.entity.Query;
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -35,9 +37,6 @@ public class QueryService {
 
     @Autowired
     PropertyService propertyService;
-
-    private int similarQueriesCount;
-    private int recordedQueriesCount;
 
     private static final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2));
@@ -101,7 +100,17 @@ public class QueryService {
                     stringBuilder.append(e.getLocalizedMessage()).append(System.lineSeparator()).append(System.lineSeparator());
                     stringBuilder.append(ExceptionUtils.getStackTrace(e));
 
-                    query.setProcessingResultCode(HttpStatus.I_AM_A_TEAPOT);
+                    HttpStatus respondStatus = null;
+
+                    if (e instanceof HttpClientErrorException) {
+                        respondStatus =  HttpStatus.resolve(((HttpClientErrorException) e).getRawStatusCode());
+                    }
+
+                    if (respondStatus == null) {
+                        respondStatus = HttpStatus.I_AM_A_TEAPOT;
+                    }
+
+                    query.setProcessingResultCode(respondStatus);
                     query.setProcessingErrorMessage(stringBuilder.toString());
                 }
                 queryRepository.save(query);
@@ -135,15 +144,14 @@ public class QueryService {
 
         query = queryRepository.save(query);
 
-        recordedQueriesCount++;
-
         return query;
     }
 
-    public boolean isQueryDelayed(String messageType, String messageToken) {
-        boolean result = queryRepository.findByMessageTypeAndMessageToken(messageType, messageToken).isPresent();
-        if (result) {
-            similarQueriesCount++;
+    public Timestamp getDelayedMessageDateIfExist(String messageType, String messageToken) {
+        Timestamp result = null;
+        Optional<Query> query = queryRepository.findByMessageTypeAndMessageToken(messageType, messageToken);
+        if (query.isPresent()) {
+            result = query.get().getRequestDate();
         }
 
         return result;
@@ -159,7 +167,7 @@ public class QueryService {
 
     @Scheduled(cron = "0 0 0 * * *")
     @Async
-    public void deleteProcessedQueries() {
+    void deleteProcessedQueries() {
         long daysOffset = Long.parseLong(Objects.requireNonNull(propertyService.getProperty("viber-service.delayed-queries-processing.days-to-keep-processed-queries")));
         List<Query> queriesToDelete = queryRepository.findByProcessingResultCodeAndProcessingDateBefore(200, new Timestamp(System.currentTimeMillis() - daysOffset * 86400000));
         queryRepository.deleteAll(queriesToDelete);
