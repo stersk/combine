@@ -116,7 +116,7 @@ public class QueryController {
 
                 statisticService.logDelayedQuery(System.currentTimeMillis() - startTimeInMillis);
             } else {
-                statisticService.logSimilarQuery(messageType, messageToken);
+                statisticService.logSimilarQuery(messageType, messageToken, messageUserId, new Timestamp(startTimeInMillis), originalQueryTimestamp);
             }
             responseEntity = new ResponseEntity<>("", HttpStatus.OK);
         }
