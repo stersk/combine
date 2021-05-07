@@ -12,11 +12,13 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import ua.com.tracktor.kombine.service.QueryService;
+import ua.com.tracktor.kombine.service.StatisticService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +31,9 @@ public class QueryController {
     @Autowired
     QueryService queryService;
 
+    @Autowired
+    StatisticService statisticService;
+
     @PostMapping(path="/viber/{account}")
     public ResponseEntity<String> processRequest(@RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request, @PathVariable String account) throws URISyntaxException {
         ResponseEntity<String> responseEntity;
@@ -38,10 +43,13 @@ public class QueryController {
         String messageType = "";
         String messageToken = "";
 
+        long startTimeInMillis = System.currentTimeMillis();
+
         try {
             JsonNode responseBodyNode = mapper.readTree(body);
 
             messageToken = responseBodyNode.get("message_token").asText();
+            messageType = responseBodyNode.get("event").asText();
 
             switch (messageType) {
                 case "delivered":
@@ -96,9 +104,14 @@ public class QueryController {
 
         } else {
             String signature = headers.getFirst("X-Viber-Content-Signature");
-            if (queryService.isQueryDelayed(messageType, messageToken)) {
+            Timestamp originalQueryTimestamp = queryService.getDelayedMessageDateIfExist(messageType, messageToken);
+            if (originalQueryTimestamp == null) {
                 queryService.saveQuery(signature, account, body, messageType, messageToken);
                 queryService.runDelayedQueryProcessing();
+
+                statisticService.logDelayedQuery(System.currentTimeMillis() - startTimeInMillis);
+            } else {
+                statisticService.logSimilarQuery(messageType, messageToken);
             }
             responseEntity = new ResponseEntity<>("", HttpStatus.OK);
         }
