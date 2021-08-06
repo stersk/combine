@@ -48,6 +48,9 @@ public class QueryService {
         public void run() {
             boolean processQueries = Boolean.parseBoolean(propertyService.getProperty("viber-service.delayed-queries-processing.enabled"));
 
+            //TODO
+            //1. Add authorization headers according to account when send processing query
+
             if (processQueries) {
                 List<Query> queriesForProcess = getQueriesToProcess();
                 if (!queriesForProcess.isEmpty()) {
