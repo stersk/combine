@@ -13,7 +13,6 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import ua.com.tracktor.kombine.service.QueryService;
-import ua.com.tracktor.kombine.service.StatisticService;
 import ua.com.tracktor.kombine.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,9 +31,6 @@ public class QueryController {
 
     @Autowired
     QueryService queryService;
-
-    @Autowired
-    StatisticService statisticService;
 
     @Autowired
     UserService userService;
@@ -123,10 +119,6 @@ public class QueryController {
             if (originalQueryTimestamp == null) {
                 queryService.saveQuery(signature, account, body, messageType, messageToken, messageUserId);
                 queryService.runDelayedQueryProcessing();
-
-                statisticService.logDelayedQuery(System.currentTimeMillis() - startTimeInMillis);
-            } else {
-                statisticService.logSimilarQuery(messageType, messageToken, messageUserId, new Timestamp(startTimeInMillis), originalQueryTimestamp);
             }
             responseEntity = new ResponseEntity<>("", HttpStatus.OK);
         }

@@ -1,13 +1,19 @@
 package ua.com.tracktor.kombine.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.*;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import ua.com.tracktor.kombine.data.PropertyRepository;
 import ua.com.tracktor.kombine.entity.Property;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.StreamSupport;
 
 @Service
