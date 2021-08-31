@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit name="Stub">
+        <packages>
+          <package value="ua.com.tracktor.kombine.stub" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit name="Kombine">
+        <packages>
+          <package value="ua.com.tracktor.kombine" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
+</project>
