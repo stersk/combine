@@ -38,6 +38,9 @@ public class QueryService {
     @Autowired
     PropertyService propertyService;
 
+    @Autowired
+    UserService userService;
+
     private static final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2));
 
@@ -47,9 +50,6 @@ public class QueryService {
         @Override
         public void run() {
             boolean processQueries = Boolean.parseBoolean(propertyService.getProperty("viber-service.delayed-queries-processing.enabled"));
-
-            //TODO
-            //1. Add authorization headers according to account when send processing query
 
             if (processQueries) {
                 List<Query> queriesForProcess = getQueriesToProcess();
@@ -70,6 +70,7 @@ public class QueryService {
             if (!interruptExecution) {
 
                 try {
+                    String account = query.getAccount();
                     String scheme = environment.getProperty("viber-service.server.scheme");
                     String address = environment.getProperty("viber-service.server.address");
                     String path = environment.getProperty("viber-service.server.path") + query.getAccount();
@@ -80,6 +81,8 @@ public class QueryService {
                     HttpHeaders headers = new HttpHeaders();
                     headers.add("X-Viber-Content-Signature", query.getSignature());
                     headers.add("X-Delayed-Content", "true");
+
+                    userService.addBasicAuthHeader(account, headers);
 
                     HttpEntity<String> httpEntity = new HttpEntity<>(query.getRequestBody(), headers);
                     RestTemplate restTemplate = new RestTemplate();
