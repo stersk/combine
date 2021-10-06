@@ -188,6 +188,9 @@ public class QueryController {
     public ResponseEntity<String> processClientRequest(@RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request) throws URISyntaxException {
         // Temporary hardcoded
         String account = "e3c5fbdf-bd57-11eb-a0a7-4ccc6af41fd6";
+        if (request.getRequestURI().contains("24a93fd5-2538-11ec-a232-00155d008d05")) {
+            account = "765845de-24e6-11ec-a0dc-4ccc6af41fd6";
+        }
 
         ResponseEntity<String> responseEntity;
 

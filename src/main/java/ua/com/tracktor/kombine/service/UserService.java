@@ -27,4 +27,8 @@ public class UserService {
             headers.add("Authorization", authHeader);
         }
     }
+
+    public Optional<User> getUserDataByAccountId(String account) {
+        return userRepository.findByAccountId(account);
+    }
 }
