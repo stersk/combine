@@ -73,6 +73,20 @@ public class FileService {
         }
     }
 
+    public String getFileRelativeAddress(String filePath) {
+        Path root = Paths.get(filesFullPath);
+        if (!Files.exists(root)) {
+            init();
+        }
+
+        Path fileDataPath = Paths.get(filesFullPath + filePath);
+        if (Files.exists(fileDataPath)) {
+            return staticResourcesPath + filesPath + filePath;
+        } else {
+            return "";
+        }
+    }
+
     private String getFilesFullPath() {
         Optional<String> elementData = Arrays.stream(staticResourcesLocation.split(",")).filter(element -> element.startsWith("file:")).findFirst();
         if (elementData.isEmpty()) {
