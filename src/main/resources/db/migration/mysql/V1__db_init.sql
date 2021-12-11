@@ -25,6 +25,8 @@ CREATE TABLE query_sequence (
   next_val BIGINT DEFAULT NULL
 );
 
+INSERT INTO query_sequence (next_val) VALUES (0);
+
 CREATE TABLE users (
   id BIGINT AUTO_INCREMENT NOT NULL,
   account_id VARCHAR(255) NULL,
@@ -36,3 +38,5 @@ CREATE TABLE users (
 CREATE TABLE users_sequence (
   next_val BIGINT DEFAULT NULL
 );
+
+INSERT INTO users_sequence (next_val) VALUES (0);
