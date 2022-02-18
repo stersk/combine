@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -156,6 +157,7 @@ public class QueryService {
 
     public Timestamp getDelayedMessageDateIfExist(String messageType, String messageToken, String messageUserId) {
         Timestamp result = null;
+
         Optional<Query> query = queryRepository.findByMessageTypeAndMessageTokenAndMessageUserId(messageType, messageToken, messageUserId);
         if (query.isPresent()) {
             result = query.get().getRequestDate();
@@ -167,7 +169,13 @@ public class QueryService {
     public void runDelayedQueryProcessing() {
         if (!threadPoolExecutor.isShutdown()) {
             if (threadPoolExecutor.getQueue().remainingCapacity() > 0) {
-                threadPoolExecutor.execute(new ProcessDelayedQueriesTask());
+                try {
+                    threadPoolExecutor.execute(new ProcessDelayedQueriesTask());
+                } catch (RejectedExecutionException exception) {
+                    System.out.println(exception.getMessage());
+                }
+
+
             }
         }
     }

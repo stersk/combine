@@ -1,5 +1,3 @@
-USE [KombineProxyServer]
-GO
 CREATE SEQUENCE [dbo].[users_sequence]
  AS [bigint]
  START WITH 1
