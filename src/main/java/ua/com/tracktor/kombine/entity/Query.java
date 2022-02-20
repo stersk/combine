@@ -1,8 +1,6 @@
 package ua.com.tracktor.kombine.entity;
 
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.springframework.http.HttpStatus;
 
@@ -15,16 +13,13 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 public class Query {
     @Id
-    @GeneratedValue(generator = "sequence-generator")
-    @GenericGenerator(
-            name = "sequence-generator",
-            strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-            parameters = {
-                    @Parameter(name = "sequence_name", value = "query_sequence"),
-                    @Parameter(name = "initial_value", value = "1"),
-                    @Parameter(name = "increment_size", value = "1")
-            }
-    )
+    @GeneratedValue(generator = "query_sequence",
+                    strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(
+            name = "query_sequence",
+            sequenceName = "query_sequence",
+            allocationSize = 10
+    ) //https://vladmihalcea.com/hibernate-hidden-gem-the-pooled-lo-optimizer/
 
     private Long id;
     private String account;

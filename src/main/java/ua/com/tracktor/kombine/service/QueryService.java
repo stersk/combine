@@ -9,17 +9,18 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import ua.com.tracktor.kombine.data.QueryRepository;
 import ua.com.tracktor.kombine.entity.Query;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -41,6 +42,11 @@ public class QueryService {
 
     @Autowired
     UserService userService;
+
+    @PersistenceContext
+    private EntityManager entityManger;
+
+    private final List<Query> queriesToWrite = Collections.synchronizedList(new ArrayList<Query>());
 
     private static final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2));
@@ -139,7 +145,8 @@ public class QueryService {
         }
     }
 
-    public Query saveQuery(String signature, String account, String body, String messageType, String messageToken, String messageUserId) {
+    @Transactional
+    public void saveQuery(String signature, String account, String body, String messageType, String messageToken, String messageUserId) {
         Query query = new Query();
         query.setSignature(signature);
         query.setAccount(account);
@@ -150,18 +157,16 @@ public class QueryService {
         query.setMessageToken(messageToken);
         query.setMessageUserId(messageUserId);
 
-        query = queryRepository.save(query);
-
-        return query;
+        entityManger.persist(query);
     }
 
     public Timestamp getDelayedMessageDateIfExist(String messageType, String messageToken, String messageUserId) {
         Timestamp result = null;
 
-        Optional<Query> query = queryRepository.findByMessageTypeAndMessageTokenAndMessageUserId(messageType, messageToken, messageUserId);
-        if (query.isPresent()) {
-            result = query.get().getRequestDate();
-        }
+//        Optional<Query> query = queryRepository.findByMessageTypeAndMessageTokenAndMessageUserId(messageType, messageToken, messageUserId);
+//        if (query.isPresent()) {
+//            result = query.get().getRequestDate();
+//        }
 
         return result;
     }
@@ -183,8 +188,17 @@ public class QueryService {
     @Scheduled(cron = "0 0 0 * * *")
     @Async
     void deleteProcessedQueries() {
+        Date limitTime = new Date(System.nanoTime() + 14_400_000_000_000L);
         long daysOffset = Long.parseLong(Objects.requireNonNull(propertyService.getProperty("viber-service.delayed-queries-processing.days-to-keep-processed-queries")));
-        List<Query> queriesToDelete = queryRepository.findByProcessingResultCodeAndProcessingDateBefore(200, new Timestamp(System.currentTimeMillis() - daysOffset * 86400000));
-        queryRepository.deleteAll(queriesToDelete);
+
+        List<Query> queriesToDelete;
+        do {
+            queriesToDelete = queryRepository.findFirst100ByProcessingResultCodeAndProcessingDateBefore(200, new Timestamp(System.currentTimeMillis() - daysOffset * 86400000));
+            queryRepository.deleteAll(queriesToDelete);
+
+            if (new Date(System.nanoTime()).after(limitTime)) {
+                break;
+            }
+        } while (!queriesToDelete.isEmpty());
     }
 }
