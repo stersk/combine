@@ -7,7 +7,7 @@
           <package value="ua.com.tracktor.kombine.stub" />
         </packages>
       </persistence-unit>
-      <persistence-unit name="Kombine">
+      <persistence-unit name="Kombine" defaultSearchScope="Project">
         <packages>
           <package value="ua.com.tracktor.kombine" />
         </packages>
