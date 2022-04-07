@@ -193,11 +193,17 @@ public class QueryService {
 
         List<Query> queriesToDelete;
         do {
-            queriesToDelete = queryRepository.findFirst100ByProcessingResultCodeAndProcessingDateBefore(200, new Timestamp(System.currentTimeMillis() - daysOffset * 86400000));
+            queriesToDelete = queryRepository.findFirst50ByProcessingResultCodeAndProcessingDateBefore(200, new Timestamp(System.currentTimeMillis() - daysOffset * 86400000));
             queryRepository.deleteAll(queriesToDelete);
 
             if (new Date(System.nanoTime()).after(limitTime)) {
                 break;
+            }
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
             }
         } while (!queriesToDelete.isEmpty());
     }

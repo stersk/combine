@@ -9,5 +9,5 @@ import java.util.List;
 public interface QueryRepository extends CrudRepository<Query, Long> {
     List<Query> findTop10ByProcessingResultCodeOrderByRequestDateDesc(int notProcessedCode);
     List<Query> findTop10ByProcessingResultCodeNotAndRetryTrueAndProcessingDateBeforeOrderByRequestDateDesc(int notProcessedCode, Timestamp lastErrorDateAfter);
-    List<Query> findFirst100ByProcessingResultCodeAndProcessingDateBefore(int processedCode, Timestamp startProcessedDate);
+    List<Query> findFirst50ByProcessingResultCodeAndProcessingDateBefore(int processedCode, Timestamp startProcessedDate);
 }
