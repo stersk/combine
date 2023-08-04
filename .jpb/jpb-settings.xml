@@ -3,4 +3,18 @@
   <component name="JpaPluginProjectSettings">
     <option name="lastSelectedLanguage" value="Java" />
   </component>
+  <component name="PersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit name="Stub">
+        <packages>
+          <package value="ua.com.tracktor.kombine.stub" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit name="Kombine" defaultSearchScope="Project">
+        <packages>
+          <package value="ua.com.tracktor.kombine" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
 </project>

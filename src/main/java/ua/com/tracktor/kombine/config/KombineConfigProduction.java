@@ -31,13 +31,13 @@ public class KombineConfigProduction implements WebMvcConfigurer {
     @Value("${server.additionalPorts:null}")
     private String additionalPorts;
 
-    @Value("${server.ssl.key-store}")
+    @Value("${server.ssl.key-store:null}")
     private String sslKeyStore;
 
-    @Value("${server.ssl.key-store-password}")
+    @Value("${server.ssl.key-store-password:null}")
     private String sslKeyStorePassword;
 
-    @Value("${server.ssl.key-alias}")
+    @Value("${server.ssl.key-alias:null}")
     private String sslKeyAlias;
 
     @Bean
@@ -52,6 +52,10 @@ public class KombineConfigProduction implements WebMvcConfigurer {
     }
 
     private Connector[] additionalConnector() {
+
+        // TODO
+        //     Make additional ports unsecured (without ssl) when main port is unsecured or optional
+
         if (this.additionalPorts == null || this.additionalPorts.equals("")) {
             return new Connector[0];
         }

@@ -182,8 +182,6 @@ public class QueryController {
         return responseEntity;
     }
 
-        // used for Telegram webhook processing
-
     @PostMapping(path="/hs/viberService/**")
     public ResponseEntity<String> processClientRequest(@RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request) throws URISyntaxException {
         // Temporary hardcoded
